@@ -1,0 +1,47 @@
+'use client';
+
+import dynamic from 'next/dynamic';
+import { Suspense, useEffect } from 'react';
+import Navigation from '@/components/ui/Navigation';
+import ScrollOverlay from '@/components/ui/ScrollOverlay';
+import Cursor from '@/components/effects/Cursor';
+import Loader from '@/components/ui/Loader';
+import useLenis from '@/hooks/useLenis';
+import { useStore } from '@/lib/store';
+
+// Dynamically import the 3D scene (client-only, no SSR for WebGL)
+const Scene = dynamic(() => import('@/components/Scene'), {
+  ssr: false,
+  loading: () => null,
+});
+
+export default function Home() {
+  useLenis(); // smooth scroll
+  const loading = useStore((s) => s.loading);
+
+  useEffect(() => {
+    // Simulate asset load completion
+    const t = setTimeout(() => useStore.getState().setLoading(false), 2200);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <>
+      <Cursor />
+      {loading && <Loader />}
+
+      {/* Persistent 3D canvas */}
+      <div className="canvas-root">
+        <Suspense fallback={null}>
+          <Scene />
+        </Suspense>
+      </div>
+
+      {/* Fixed navigation */}
+      <Navigation />
+
+      {/* Scrollable overlay: drives scroll length and displays text */}
+      <ScrollOverlay />
+    </>
+  );
+}
